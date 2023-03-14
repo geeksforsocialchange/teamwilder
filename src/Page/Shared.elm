@@ -1,8 +1,9 @@
 module Page.Shared exposing (AudioMeta, GuideTeaser, StoryTeaser, VideoMeta, guideTeaserList, viewAudio, viewGuideTeaserList, viewVideo)
 
-import Html.Styled exposing (Html, a, div, iframe, li, text, ul)
-import Html.Styled.Attributes exposing (attribute, autoplay, href, src, title)
+import Html.Styled exposing (Html, a, div, iframe, img, li, p, text, ul)
+import Html.Styled.Attributes exposing (alt, attribute, autoplay, href, src, title)
 import List exposing (map, sortBy)
+import Page.Guide.Summary as Summary
 import Shared exposing (Msg)
 
 
@@ -27,6 +28,8 @@ type alias StoryTeaser =
 type alias GuideTeaser =
     { title : String
     , url : String
+    , summary : Maybe Summary.Summary
+    , img : { src : String, alt : String }
     }
 
 
@@ -51,7 +54,21 @@ viewAudio audioMeta =
 
 viewGuideTeaser : GuideTeaser -> Html Msg
 viewGuideTeaser teaser =
-    a [ href teaser.url ] [ text teaser.title ]
+    div []
+        [ img [ src teaser.img.src, alt teaser.img.alt ] []
+        , p []
+            [ a [ href teaser.url ]
+                [ text teaser.title ]
+            ]
+        , case teaser.summary of
+            Nothing ->
+                text ""
+
+            Just sum ->
+                p
+                    []
+                    [ text <| Summary.toString sum ]
+        ]
 
 
 viewGuideTeaserList : List GuideTeaser -> Html Msg
@@ -70,8 +87,14 @@ viewGuideTeaserList teasers =
 
 
 -- utils
+-- [fFf] replace img with live content
 
 
-guideTeaserList : List String -> List GuideTeaser
-guideTeaserList titles =
-    List.map (\title -> GuideTeaser title <| "/guides/" ++ String.replace " " "-" title) titles
+placeHolderImg : { src : String, alt : String }
+placeHolderImg =
+    { src = "/images/wildlife-trust-logo.png", alt = "[cCc]" }
+
+
+guideTeaserList : List { title : String, summary : String } -> List GuideTeaser
+guideTeaserList teaserStrings =
+    List.map (\teaser -> GuideTeaser teaser.title ("/guides/" ++ String.replace " " "-" teaser.title) (Summary.init teaser.summary) placeHolderImg) teaserStrings
